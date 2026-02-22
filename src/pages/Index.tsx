@@ -1,12 +1,33 @@
-import { useState, useMemo } from "react";
-import { products, categories } from "@/data/products";
+import { useState, useMemo, useEffect } from "react";
+import { products as localProducts, categories, Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
+import { apiFetch, isServerAvailable } from "@/lib/api";
 
 const Index = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [products, setProducts] = useState<Product[]>(localProducts);
+
+  // Try fetching from server on mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const serverUp = await isServerAvailable();
+      if (serverUp) {
+        try {
+          const res = await apiFetch("/products");
+          if (res.ok) {
+            const data = await res.json();
+            setProducts(data);
+          }
+        } catch {
+          // Keep local fallback
+        }
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -15,7 +36,7 @@ const Index = () => {
         p.description.toLowerCase().includes(search.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [search, category]);
+  }, [search, category, products]);
 
   return (
     <div className="min-h-screen">
