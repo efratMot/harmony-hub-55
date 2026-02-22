@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Check, Package } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiFetch, isServerAvailable } from "@/lib/api";
 
 const steps = ["Shipping", "Review", "Confirmation"];
 
@@ -26,19 +27,45 @@ const CheckoutPage = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const orderItems = items.map((i) => ({
+      productId: i.product.id,
+      name: i.product.name,
+      quantity: i.quantity,
+      price: i.product.price,
+    }));
+
+    const serverUp = await isServerAvailable();
+
+    if (serverUp) {
+      try {
+        const res = await apiFetch("/orders", {
+          method: "POST",
+          body: JSON.stringify({ items: orderItems, total: totalPrice, shipping }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setOrderId(data.orderId);
+          clearCart();
+          setStep(2);
+          return;
+        }
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // Mock fallback
     const id = `ORD-${Date.now()}`;
     setOrderId(id);
-    // In a real app, this would POST to /api/orders
     const order = {
       orderId: id,
       userId: user?.id,
-      items: items.map((i) => ({ productId: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price })),
+      items: orderItems,
       total: totalPrice,
       shipping,
       timestamp: new Date().toISOString(),
     };
-    // Save to localStorage as mock
     const orders = JSON.parse(localStorage.getItem("orders") || "[]");
     orders.push(order);
     localStorage.setItem("orders", JSON.stringify(orders));

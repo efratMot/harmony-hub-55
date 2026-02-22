@@ -1,0 +1,16 @@
+[
+  {
+    "id": "admin-1",
+    "name": "Admin User",
+    "email": "admin@musicstore.com",
+    "password": "$2a$10$YourHashedPasswordHere",
+    "isAdmin": true
+  },
+  {
+    "id": "user-1",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "$2a$10$YourHashedPasswordHere",
+    "isAdmin": false
+  }
+]

@@ -1,10 +1,11 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { products } from "@/data/products";
+import { products as localProducts, Product } from "@/data/products";
 import { useCart } from "@/contexts/CartContext";
 import { ArrowLeft, ShoppingCart, Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
+import { apiFetch, isServerAvailable } from "@/lib/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -12,8 +13,29 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const [zoomed, setZoomed] = useState(false);
+  const [product, setProduct] = useState<Product | null>(
+    localProducts.find((p) => p.id === id) || null
+  );
+  const [allProducts, setAllProducts] = useState<Product[]>(localProducts);
 
-  const product = products.find((p) => p.id === id);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const serverUp = await isServerAvailable();
+      if (serverUp) {
+        try {
+          const [prodRes, allRes] = await Promise.all([
+            apiFetch(`/products/${id}`),
+            apiFetch("/products"),
+          ]);
+          if (prodRes.ok) setProduct(await prodRes.json());
+          if (allRes.ok) setAllProducts(await allRes.json());
+        } catch {
+          // Keep local fallback
+        }
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
   if (!product) {
     return (
@@ -24,7 +46,7 @@ const ProductDetail = () => {
     );
   }
 
-  const recommended = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const recommended = allProducts.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
   const handleAdd = () => {
     addToCart(product);

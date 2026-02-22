@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { apiFetch, isServerAvailable } from "@/lib/api";
 
 interface User {
   id: string;
@@ -19,7 +20,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users database
+// Mock users database (fallback when server is unavailable)
 const mockUsers: (User & { password: string })[] = [
   { id: "admin-1", name: "Admin User", email: "admin@musicstore.com", password: "admin123", isAdmin: true },
   { id: "user-1", name: "John Doe", email: "john@example.com", password: "password123", isAdmin: false },
@@ -38,28 +39,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const saveAuth = (newToken: string, newUser: User) => {
+    setUser(newUser);
+    setToken(newToken);
+    localStorage.setItem("auth_token", newToken);
+    localStorage.setItem("auth_user", JSON.stringify(newUser));
+  };
+
   const login = async (email: string, password: string): Promise<boolean> => {
+    const serverUp = await isServerAvailable();
+
+    if (serverUp) {
+      try {
+        const res = await apiFetch("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        saveAuth(data.token, data.user);
+        return true;
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // Mock fallback
     const found = mockUsers.find((u) => u.email === email && u.password === password);
     if (!found) return false;
     const fakeToken = btoa(`${found.id}:${Date.now()}`);
     const { password: _, ...userWithoutPassword } = found;
-    setUser(userWithoutPassword);
-    setToken(fakeToken);
-    localStorage.setItem("auth_token", fakeToken);
-    localStorage.setItem("auth_user", JSON.stringify(userWithoutPassword));
+    saveAuth(fakeToken, userWithoutPassword);
     return true;
   };
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    const serverUp = await isServerAvailable();
+
+    if (serverUp) {
+      try {
+        const res = await apiFetch("/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ name, email, password }),
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        saveAuth(data.token, data.user);
+        return true;
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // Mock fallback
     if (mockUsers.find((u) => u.email === email)) return false;
     const newUser = { id: `user-${Date.now()}`, name, email, password, isAdmin: false };
     mockUsers.push(newUser);
     const fakeToken = btoa(`${newUser.id}:${Date.now()}`);
     const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    setToken(fakeToken);
-    localStorage.setItem("auth_token", fakeToken);
-    localStorage.setItem("auth_user", JSON.stringify(userWithoutPassword));
+    saveAuth(fakeToken, userWithoutPassword);
     return true;
   };
 

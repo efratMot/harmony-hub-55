@@ -1,23 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { products as initialProducts, Product, categories } from "@/data/products";
+import { products as localProducts, Product, categories } from "@/data/products";
 import { Plus, Trash2, Package } from "lucide-react";
 import { motion } from "framer-motion";
+import { apiFetch, isServerAvailable } from "@/lib/api";
 
 const AdminPage = () => {
   const { isAdmin, isAuthenticated } = useAuth();
-  const [productsList, setProductsList] = useState<Product[]>(initialProducts);
+  const [productsList, setProductsList] = useState<Product[]>(localProducts);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", category: "Guitars", price: "", image: "", description: "", stock: "" });
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const serverUp = await isServerAvailable();
+      if (serverUp) {
+        try {
+          const res = await apiFetch("/products");
+          if (res.ok) setProductsList(await res.json());
+        } catch {
+          // Keep local fallback
+        }
+      }
+    };
+    fetchProducts();
+  }, []);
 
   if (!isAuthenticated) return <Navigate to="/login" />;
   if (!isAdmin) return <Navigate to="/" />;
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProduct: Product = {
-      id: `prod-${Date.now()}`,
+    const newProductData = {
       name: form.name,
       category: form.category,
       price: Number(form.price),
@@ -25,12 +40,50 @@ const AdminPage = () => {
       description: form.description,
       stock: Number(form.stock),
     };
+
+    const serverUp = await isServerAvailable();
+
+    if (serverUp) {
+      try {
+        const res = await apiFetch("/products", {
+          method: "POST",
+          body: JSON.stringify(newProductData),
+        });
+        if (res.ok) {
+          const created = await res.json();
+          setProductsList([created, ...productsList]);
+          setForm({ name: "", category: "Guitars", price: "", image: "", description: "", stock: "" });
+          setShowForm(false);
+          return;
+        }
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // Mock fallback
+    const newProduct: Product = { id: `prod-${Date.now()}`, ...newProductData };
     setProductsList([newProduct, ...productsList]);
     setForm({ name: "", category: "Guitars", price: "", image: "", description: "", stock: "" });
     setShowForm(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    const serverUp = await isServerAvailable();
+
+    if (serverUp) {
+      try {
+        const res = await apiFetch(`/products/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setProductsList(productsList.filter((p) => p.id !== id));
+          return;
+        }
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // Mock fallback
     setProductsList(productsList.filter((p) => p.id !== id));
   };
 
