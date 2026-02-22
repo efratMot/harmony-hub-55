@@ -12,5 +12,12 @@
     "email": "john@example.com",
     "password": "$2a$10$YourHashedPasswordHere",
     "isAdmin": false
+  },
+  {
+    "id": "user-1771778608860",
+    "name": "efrat",
+    "email": "efrat@gmail.com",
+    "password": "$2a$10$eICCmVEaKiomu5o3Fr1uEui5M887djO2vOzOn1UNnPD0L4rGsQVGO",
+    "isAdmin": false
   }
 ]
