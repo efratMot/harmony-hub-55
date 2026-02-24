@@ -20,9 +20,17 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cd ~/harmony-hub-55/server
+            # עדכון קוד מהגיט
+            cd ~/harmony-hub-55
             git pull origin main
+
+            # טיפול ב-Frontend
+            cd client
             npm install
             npm run build
             sudo cp -r dist/* /var/www/html/
+
+            # טיפול ב-Backend
+            cd ../server
+            npm install
             sudo systemctl restart node-service
