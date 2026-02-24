@@ -1,0 +1,26 @@
+
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # או master, תלוי איך קוראים לבראנץ' שלך
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ HARMONYSECRET }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/harmony-hub-55/server
+            git pull origin main
+            npm install
+            sudo systemctl restart node-service
