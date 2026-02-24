@@ -38,7 +38,7 @@ const LoginPage = () => {
         <div className="rounded-xl bg-card p-8 shadow-card">
           <div className="mb-6 text-center">
             <Music className="mx-auto h-8 w-8 text-accent" />
-            <h1 className="mt-3 font-display text-2xl font-bold">Welcome Back!</h1>
+            <h1 className="mt-3 font-display text-2xl font-bold">Welcome Back</h1>
             <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
           </div>
 
