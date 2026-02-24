@@ -1,6 +1,6 @@
 // API base URL — points to the Express server when running locally
 // Falls back gracefully when server is unavailable (e.g., in Lovable preview)
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://16.171.110.90//api";
 
 /**
  * Helper for making authenticated API requests.
