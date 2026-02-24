@@ -2,7 +2,7 @@
 // Falls back gracefully when server is unavailable (e.g., in Lovable preview)
 export const API_BASE_URL = window.location.hostname === "localhost" 
 ? "http://localhost:5000" 
-: "http://16.171.110.90/api:5000";
+: "http://16.171.110.90/api";
 
 /**
  * Helper for making authenticated API requests.
