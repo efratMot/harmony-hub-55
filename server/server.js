@@ -26,6 +26,7 @@ app.get("/api/health", (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  console.log("CI/CD is working!")
   console.log(`🎵 Harmony Music Store server running on http://localhost:${PORT}`);
   console.log(`📦 API available at http://localhost:${PORT}/api`);
 });
