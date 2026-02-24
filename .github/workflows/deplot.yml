@@ -17,7 +17,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ HARMONYSECRET }}
+          username: ${{ secrets.HARMONYSECRET }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/harmony-hub-55/server
